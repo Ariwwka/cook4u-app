@@ -9,37 +9,23 @@ const STATUS_LABEL: Record<string, string> = {
   pending_acceptance: 'Waiting for chef',
   confirmed: 'Confirmed',
   preparing: 'Being prepared',
-  ready: 'Ready',
-  out_for_delivery: 'Out for delivery',
+  ready: 'Ready for pickup',
+  out_for_delivery: 'On the way',
   delivered: 'Delivered',
   cancelled: 'Cancelled',
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  payment_pending: 'text-gray-400',
-  pending_acceptance: 'text-yellow-500',
-  confirmed: 'text-blue-500',
-  preparing: 'text-blue-500',
-  ready: 'text-indigo-500',
-  out_for_delivery: 'text-teal-500',
-  delivered: 'text-green-500',
-  cancelled: 'text-red-400',
-}
-
 const STATUS_STEPS = ['pending_acceptance', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered']
 
-function ProgressBar({ status }: { status: string }) {
-  const idx = STATUS_STEPS.indexOf(status)
-  if (idx < 0) return null
-  const pct = Math.round(((idx + 1) / STATUS_STEPS.length) * 100)
-  return (
-    <View className="mt-3">
-      <View className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-        <View className="h-full bg-orange-500 rounded-full" style={{ width: `${pct}%` }} />
-      </View>
-      <Text className="text-xs text-gray-400 mt-1">{STATUS_LABEL[status] ?? status}</Text>
-    </View>
-  )
+const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
+  payment_pending: { bg: '#f9fafb', text: '#6b7280', dot: '#9ca3af' },
+  pending_acceptance: { bg: '#fffbeb', text: '#b45309', dot: '#f59e0b' },
+  confirmed: { bg: '#eff6ff', text: '#1d4ed8', dot: '#3b82f6' },
+  preparing: { bg: '#eff6ff', text: '#1d4ed8', dot: '#3b82f6' },
+  ready: { bg: '#f5f3ff', text: '#6d28d9', dot: '#8b5cf6' },
+  out_for_delivery: { bg: '#f0fdfa', text: '#0f766e', dot: '#14b8a6' },
+  delivered: { bg: '#f0fdf4', text: '#15803d', dot: '#22c55e' },
+  cancelled: { bg: '#fef2f2', text: '#b91c1c', dot: '#ef4444' },
 }
 
 export default function OrdersScreen() {
@@ -55,7 +41,7 @@ export default function OrdersScreen() {
       .select('id, status, total, created_at, gophr_delivery_eta, delivery_address_text, order_items(id, quantity, unit_price, menu_item:menu_items(name)), chef:chef_profiles!orders_chef_id_fkey(profile:profiles!chef_profiles_id_fkey(full_name))')
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(30)
     setOrders((data as unknown as Order[]) ?? [])
     setLoading(false)
     setRefreshing(false)
@@ -63,86 +49,109 @@ export default function OrdersScreen() {
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
-  // Real-time subscription for order status updates
   useEffect(() => {
-    const channel = supabase
-      .channel('customer_orders')
+    const channel = supabase.channel('customer_orders')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => fetchOrders())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [fetchOrders])
 
-  if (loading) return <View className="flex-1 items-center justify-center bg-white"><ActivityIndicator color="#f97316" size="large" /></View>
+  if (loading) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}><ActivityIndicator color="#f97316" size="large" /></View>
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-4 pt-4 pb-2">
-        <Text className="text-2xl font-bold text-gray-800">My Orders</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <View style={{ backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827', letterSpacing: -0.5 }}>My Orders</Text>
       </View>
 
       <ScrollView
-        className="flex-1 px-4"
-        contentContainerStyle={{ paddingBottom: 24 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchOrders() }} tintColor="#f97316" />}
       >
         {orders.length === 0 ? (
-          <View className="items-center py-20">
-            <Text className="text-5xl mb-3">📦</Text>
-            <Text className="text-gray-500 text-base">No orders yet</Text>
+          <View style={{ alignItems: 'center', paddingTop: 80 }}>
+            <Text style={{ fontSize: 56, marginBottom: 12 }}>📦</Text>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>No orders yet</Text>
+            <Text style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Your orders will appear here</Text>
           </View>
         ) : (
-          <View className="gap-3 mt-2">
-            {orders.map(order => {
-              const chefName = (order.chef as any)?.profile?.full_name ?? 'Chef'
-              const date = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-              const eta = order.gophr_delivery_eta ? new Date(order.gophr_delivery_eta) : null
-              const etaTime = eta ? eta.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : null
-              const statusColor = STATUS_COLOR[order.status] ?? 'text-gray-500'
-
-              return (
-                <View key={order.id} className="bg-white rounded-2xl p-4 border border-orange-50">
-                  <View className="flex-row justify-between items-start">
-                    <View>
-                      <Text className="font-bold text-gray-800 text-base">{chefName}</Text>
-                      <Text className="text-gray-400 text-xs mt-0.5">{date} · £{Number(order.total).toFixed(2)}</Text>
-                    </View>
-                    <Text className={`text-sm font-semibold ${statusColor}`}>{STATUS_LABEL[order.status] ?? order.status}</Text>
-                  </View>
-
-                  {/* Items summary */}
-                  {order.order_items && order.order_items.length > 0 && (
-                    <Text className="text-gray-400 text-xs mt-2" numberOfLines={1}>
-                      {order.order_items.map((oi: any) => `${oi.quantity}× ${oi.menu_item?.name ?? 'Item'}`).join(', ')}
-                    </Text>
-                  )}
-
-                  {/* Progress bar for active orders */}
-                  {!['payment_pending', 'cancelled', 'delivered'].includes(order.status) && (
-                    <ProgressBar status={order.status} />
-                  )}
-
-                  {/* ETA banner */}
-                  {order.status === 'out_for_delivery' && (
-                    <View className="mt-3 bg-teal-50 border border-teal-100 rounded-xl px-3 py-2 flex-row items-center gap-2">
-                      <Text>🛵</Text>
-                      <Text className="text-teal-700 text-sm font-medium flex-1">
-                        {etaTime ? `Arriving around ${etaTime}` : 'Courier is on the way'}
-                      </Text>
-                    </View>
-                  )}
-
-                  {order.status === 'delivered' && (
-                    <View className="mt-3 bg-green-50 border border-green-100 rounded-xl px-3 py-2 flex-row items-center gap-2">
-                      <Text>✅</Text>
-                      <Text className="text-green-700 text-sm font-medium">Delivered!</Text>
-                    </View>
-                  )}
-                </View>
-              )
-            })}
+          <View style={{ gap: 12 }}>
+            {orders.map(order => <OrderCard key={order.id} order={order} />)}
           </View>
         )}
       </ScrollView>
     </SafeAreaView>
+  )
+}
+
+function OrderCard({ order }: { order: Order }) {
+  const chefName = (order.chef as any)?.profile?.full_name ?? 'Chef'
+  const date = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const eta = order.gophr_delivery_eta ? new Date(order.gophr_delivery_eta) : null
+  const etaTime = eta ? eta.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : null
+  const cfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.cancelled
+  const stepIdx = STATUS_STEPS.indexOf(order.status)
+  const progress = stepIdx >= 0 ? (stepIdx + 1) / STATUS_STEPS.length : 0
+  const isActive = !['payment_pending', 'cancelled', 'delivered'].includes(order.status)
+
+  return (
+    <View style={{
+      backgroundColor: '#fff', borderRadius: 20,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+      overflow: 'hidden',
+    }}>
+      {/* Status bar accent */}
+      <View style={{ height: 4, backgroundColor: cfg.dot }} />
+
+      <View style={{ padding: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <View>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>{chefName}</Text>
+            <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>#{order.id.slice(-6).toUpperCase()} · {date}</Text>
+          </View>
+          <View>
+            <View style={{ backgroundColor: cfg.bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: cfg.dot }} />
+              <Text style={{ fontSize: 12, fontWeight: '700', color: cfg.text }}>{STATUS_LABEL[order.status] ?? order.status}</Text>
+            </View>
+            <Text style={{ fontSize: 14, fontWeight: '800', color: '#111827', textAlign: 'right', marginTop: 6 }}>£{Number(order.total).toFixed(2)}</Text>
+          </View>
+        </View>
+
+        {order.order_items && order.order_items.length > 0 && (
+          <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 10 }} numberOfLines={1}>
+            {order.order_items.map((oi: any) => `${oi.quantity}× ${oi.menu_item?.name ?? 'Item'}`).join(' · ')}
+          </Text>
+        )}
+
+        {/* Progress */}
+        {isActive && progress > 0 && (
+          <View style={{ marginTop: 14 }}>
+            <View style={{ height: 4, backgroundColor: '#f3f4f6', borderRadius: 2, overflow: 'hidden' }}>
+              <View style={{ height: 4, backgroundColor: cfg.dot, borderRadius: 2, width: `${progress * 100}%` }} />
+            </View>
+            <Text style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>Step {stepIdx + 1} of {STATUS_STEPS.length}</Text>
+          </View>
+        )}
+
+        {/* ETA */}
+        {order.status === 'out_for_delivery' && (
+          <View style={{ marginTop: 12, backgroundColor: '#f0fdfa', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 18 }}>🛵</Text>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f766e', flex: 1 }}>
+              {etaTime ? `Arriving around ${etaTime}` : 'Courier is on the way'}
+            </Text>
+          </View>
+        )}
+
+        {order.status === 'delivered' && (
+          <View style={{ marginTop: 12, backgroundColor: '#f0fdf4', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 18 }}>✅</Text>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: '#15803d' }}>Delivered — enjoy your meal!</Text>
+          </View>
+        )}
+      </View>
+    </View>
   )
 }

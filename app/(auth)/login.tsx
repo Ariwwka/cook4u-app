@@ -42,85 +42,93 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-white">
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <View className="flex-1 px-6 pt-20 pb-10">
-          {/* Logo */}
-          <View className="items-center mb-10">
-            <Text className="text-4xl font-bold text-orange-500">Cook4U</Text>
-            <Text className="text-gray-400 text-sm mt-1">Home-cooked meals, delivered</Text>
+        {/* Hero */}
+        <View style={{ backgroundColor: '#f97316', paddingTop: 80, paddingBottom: 48, paddingHorizontal: 32, alignItems: 'center' }}>
+          <View style={{ width: 64, height: 64, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <Text style={{ fontSize: 32 }}>🍳</Text>
           </View>
+          <Text style={{ fontSize: 32, fontWeight: '800', color: '#fff', letterSpacing: -0.5 }}>Cook4U</Text>
+          <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>Home-cooked meals, delivered</Text>
+        </View>
 
-          {/* Mode toggle */}
-          <View className="flex-row bg-gray-100 rounded-2xl p-1 mb-6">
+        <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 32 }}>
+          {/* Tab toggle */}
+          <View style={{ flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 14, padding: 4, marginBottom: 24 }}>
             {(['signin', 'signup'] as const).map(m => (
               <TouchableOpacity
                 key={m}
                 onPress={() => setMode(m)}
-                className={`flex-1 py-2.5 rounded-xl items-center ${mode === m ? 'bg-white shadow-sm' : ''}`}
+                style={{
+                  flex: 1, paddingVertical: 10, borderRadius: 11, alignItems: 'center',
+                  backgroundColor: mode === m ? '#fff' : 'transparent',
+                  shadowColor: mode === m ? '#000' : 'transparent',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: mode === m ? 0.08 : 0,
+                  shadowRadius: 2,
+                  elevation: mode === m ? 2 : 0,
+                }}
               >
-                <Text className={`text-sm font-semibold ${mode === m ? 'text-gray-800' : 'text-gray-400'}`}>
-                  {m === 'signin' ? 'Sign In' : 'Sign Up'}
+                <Text style={{ fontSize: 14, fontWeight: '600', color: mode === m ? '#111827' : '#9ca3af' }}>
+                  {m === 'signin' ? 'Sign In' : 'Create Account'}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {/* Role selector — signup only */}
+          {/* Role selector */}
           {mode === 'signup' && (
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">I am a...</Text>
-              <View className="flex-row gap-3">
-                {(['customer', 'chef'] as const).map(r => (
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 10 }}>I want to…</Text>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {([
+                  { key: 'customer', emoji: '🍽️', label: 'Order food', sub: 'Browse local chefs' },
+                  { key: 'chef', emoji: '👨‍🍳', label: 'Cook & earn', sub: 'Sell your dishes' },
+                ] as const).map(r => (
                   <TouchableOpacity
-                    key={r}
-                    onPress={() => setRole(r)}
-                    className={`flex-1 py-3 rounded-2xl items-center border ${role === r ? 'bg-orange-500 border-orange-500' : 'bg-white border-gray-200'}`}
+                    key={r.key}
+                    onPress={() => setRole(r.key)}
+                    style={{
+                      flex: 1, borderRadius: 16, padding: 16, alignItems: 'center',
+                      backgroundColor: role === r.key ? '#fff7ed' : '#f9fafb',
+                      borderWidth: 2,
+                      borderColor: role === r.key ? '#f97316' : '#e5e7eb',
+                    }}
                   >
-                    <Text className={`font-semibold text-sm ${role === r ? 'text-white' : 'text-gray-600'}`}>
-                      {r === 'customer' ? '🍽️ Customer' : '👨‍🍳 Chef'}
-                    </Text>
+                    <Text style={{ fontSize: 28, marginBottom: 6 }}>{r.emoji}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: role === r.key ? '#ea580c' : '#374151' }}>{r.label}</Text>
+                    <Text style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{r.sub}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
           )}
 
-          {/* Fields */}
+          {/* Inputs */}
           {mode === 'signup' && (
-            <TextInput
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="Full name"
-              className="border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-gray-900 mb-3"
-              autoCapitalize="words"
-            />
+            <InputField label="Full name" value={fullName} onChangeText={setFullName} placeholder="Your name" autoCapitalize="words" />
           )}
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            className="border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-gray-900 mb-3"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Password"
-            secureTextEntry
-            className="border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-gray-900 mb-4"
-          />
+          <InputField label="Email" value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" />
+          <InputField label="Password" value={password} onChangeText={setPassword} placeholder="••••••••" secureTextEntry />
 
-          {error ? <Text className="text-red-500 text-sm mb-3 text-center">{error}</Text> : null}
+          {error ? (
+            <View style={{ backgroundColor: '#fef2f2', borderRadius: 12, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: '#fecaca' }}>
+              <Text style={{ color: '#dc2626', fontSize: 13, textAlign: 'center' }}>{error}</Text>
+            </View>
+          ) : null}
 
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={loading}
-            className="bg-orange-500 rounded-2xl py-4 items-center"
+            style={{
+              backgroundColor: '#f97316', borderRadius: 16, paddingVertical: 16,
+              alignItems: 'center', marginTop: 4,
+              shadowColor: '#f97316', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+            }}
           >
             {loading ? <ActivityIndicator color="white" /> : (
-              <Text className="text-white font-bold text-base">
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
                 {mode === 'signin' ? 'Sign In' : 'Create Account'}
               </Text>
             )}
@@ -128,5 +136,22 @@ export default function LoginScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+  )
+}
+
+function InputField({ label, ...props }: { label: string } & React.ComponentProps<typeof TextInput>) {
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 }}>{label}</Text>
+      <TextInput
+        {...props}
+        style={{
+          backgroundColor: '#f9fafb', borderWidth: 1.5, borderColor: '#e5e7eb',
+          borderRadius: 14, paddingHorizontal: 16, paddingVertical: 13,
+          fontSize: 15, color: '#111827',
+        }}
+        placeholderTextColor="#9ca3af"
+      />
+    </View>
   )
 }

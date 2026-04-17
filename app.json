@@ -34,6 +34,13 @@
           "icon": "./assets/icon.png",
           "color": "#f97316"
         }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.cook4u.app",
+          "enableGooglePay": false
+        }
       ]
     ]
   }

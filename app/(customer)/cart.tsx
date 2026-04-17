@@ -13,11 +13,13 @@ export default function CartScreen() {
   const [addressText, setAddressText] = useState('')
 
   const cartTotal = total()
+  const deliveryFee = 3.99
+  const grandTotal = cartTotal + deliveryFee
   const itemCount = items.reduce((s, i) => s + i.quantity, 0)
 
   async function handleCheckout() {
     if (!addressText.trim()) {
-      Alert.alert('Delivery address', 'Please enter your delivery address.')
+      Alert.alert('Delivery address required', 'Please enter your delivery address.')
       return
     }
     setLoading(true)
@@ -51,7 +53,7 @@ export default function CartScreen() {
       }
 
       clearCart()
-      Alert.alert('Order placed!', 'Your order has been sent to the chef.', [
+      Alert.alert('Order placed! 🎉', 'Your order has been sent to the chef.', [
         { text: 'View Orders', onPress: () => router.replace('/(customer)/orders') },
       ])
     } catch (e: unknown) {
@@ -63,11 +65,15 @@ export default function CartScreen() {
 
   if (items.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center">
-        <Text className="text-5xl mb-4">🛒</Text>
-        <Text className="text-gray-500 text-base font-medium">Your cart is empty</Text>
-        <TouchableOpacity onPress={() => router.replace('/(customer)/')} className="mt-4 bg-orange-500 px-6 py-3 rounded-2xl">
-          <Text className="text-white font-bold">Browse Chefs</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 64, marginBottom: 16 }}>🛒</Text>
+        <Text style={{ fontSize: 20, fontWeight: '800', color: '#111827' }}>Your cart is empty</Text>
+        <Text style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Add some dishes from a chef</Text>
+        <TouchableOpacity
+          onPress={() => router.replace('/(customer)/')}
+          style={{ marginTop: 20, backgroundColor: '#f97316', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 16 }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Browse Chefs</Text>
         </TouchableOpacity>
       </SafeAreaView>
     )
@@ -76,76 +82,113 @@ export default function CartScreen() {
   const chefName = items[0]?.chefName ?? 'Chef'
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-4 pt-4 pb-2">
-        <Text className="text-2xl font-bold text-gray-800">Your Cart</Text>
-        <Text className="text-gray-400 text-sm mt-0.5">From {chefName}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      {/* Header */}
+      <View style={{ backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827', letterSpacing: -0.5 }}>Your Cart</Text>
+        <Text style={{ fontSize: 14, color: '#6b7280', marginTop: 2 }}>From {chefName}</Text>
       </View>
 
-      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 200 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 180 }}>
         {/* Items */}
-        <View className="bg-white rounded-2xl border border-orange-50 mt-3 overflow-hidden">
+        <View style={{ backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 }}>
           {items.map((item, idx) => (
-            <View key={item.id} className={`flex-row items-center px-4 py-3 ${idx < items.length - 1 ? 'border-b border-gray-50' : ''}`}>
-              <View className="flex-1">
-                <Text className="font-semibold text-gray-800">{item.name}</Text>
-                <Text className="text-orange-500 text-sm font-bold mt-0.5">£{(item.price * item.quantity).toFixed(2)}</Text>
+            <View key={item.id} style={{
+              flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
+              borderBottomWidth: idx < items.length - 1 ? 1 : 0, borderBottomColor: '#f3f4f6',
+            }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '600', color: '#111827' }}>{item.name}</Text>
+                <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>£{item.price.toFixed(2)} each</Text>
               </View>
-              <View className="flex-row items-center gap-2">
-                <TouchableOpacity onPress={() => updateQuantity(item.menuItemId, item.quantity - 1)} className="w-8 h-8 bg-orange-100 rounded-full items-center justify-center">
-                  <Text className="text-orange-600 font-bold">−</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <TouchableOpacity
+                  onPress={() => updateQuantity(item.menuItemId, item.quantity - 1)}
+                  style={{ width: 32, height: 32, backgroundColor: '#f3f4f6', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ color: '#374151', fontSize: 17, fontWeight: '700' }}>−</Text>
                 </TouchableOpacity>
-                <Text className="font-bold text-gray-800 w-4 text-center">{item.quantity}</Text>
-                <TouchableOpacity onPress={() => updateQuantity(item.menuItemId, item.quantity + 1)} className="w-8 h-8 bg-orange-500 rounded-full items-center justify-center">
-                  <Text className="text-white font-bold">+</Text>
+                <Text style={{ fontWeight: '800', color: '#111827', fontSize: 15, minWidth: 20, textAlign: 'center' }}>{item.quantity}</Text>
+                <TouchableOpacity
+                  onPress={() => updateQuantity(item.menuItemId, item.quantity + 1)}
+                  style={{ width: 32, height: 32, backgroundColor: '#f97316', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700' }}>+</Text>
                 </TouchableOpacity>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#f97316', minWidth: 48, textAlign: 'right' }}>£{(item.price * item.quantity).toFixed(2)}</Text>
               </View>
             </View>
           ))}
         </View>
 
         {/* Delivery address */}
-        <View className="mt-4">
-          <Text className="text-sm font-semibold text-gray-700 mb-1.5">Delivery address</Text>
+        <View style={{ marginTop: 16 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 8 }}>Delivery address</Text>
           <TextInput
             value={addressText}
             onChangeText={setAddressText}
             placeholder="Enter your full delivery address…"
             multiline
-            className="bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-800 min-h-[60px]"
-            textAlignVertical="top"
+            placeholderTextColor="#9ca3af"
+            style={{
+              backgroundColor: '#fff', borderWidth: 1.5, borderColor: addressText ? '#f97316' : '#e5e7eb',
+              borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14,
+              fontSize: 14, color: '#111827', minHeight: 70, textAlignVertical: 'top',
+            }}
           />
         </View>
 
         {/* Summary */}
-        <View className="bg-white rounded-2xl border border-orange-50 mt-4 px-4 py-4 gap-2">
-          <View className="flex-row justify-between">
-            <Text className="text-gray-500 text-sm">Subtotal ({itemCount} item{itemCount !== 1 ? 's' : ''})</Text>
-            <Text className="text-gray-800 text-sm font-medium">£{cartTotal.toFixed(2)}</Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="text-gray-500 text-sm">Delivery</Text>
-            <Text className="text-gray-800 text-sm font-medium">£3.99</Text>
-          </View>
-          <View className="border-t border-gray-100 pt-2 flex-row justify-between">
-            <Text className="font-bold text-gray-800">Total</Text>
-            <Text className="font-bold text-orange-500 text-base">£{(cartTotal + 3.99).toFixed(2)}</Text>
+        <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 16, marginTop: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 }}>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 12 }}>Order summary</Text>
+          <View style={{ gap: 10 }}>
+            <Row label={`Subtotal (${itemCount} item${itemCount !== 1 ? 's' : ''})`} value={`£${cartTotal.toFixed(2)}`} />
+            <Row label="Delivery fee" value={`£${deliveryFee.toFixed(2)}`} />
+            <View style={{ height: 1, backgroundColor: '#f3f4f6', marginVertical: 4 }} />
+            <Row label="Total" value={`£${grandTotal.toFixed(2)}`} bold />
           </View>
         </View>
 
-        <TouchableOpacity onPress={() => { Alert.alert('Clear cart?', 'Remove all items?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Clear', style: 'destructive', onPress: clearCart }]) }} className="mt-3 items-center py-2">
-          <Text className="text-gray-400 text-sm">Clear cart</Text>
+        <TouchableOpacity
+          onPress={() => Alert.alert('Clear cart?', 'Remove all items?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Clear', style: 'destructive', onPress: clearCart }])}
+          style={{ alignItems: 'center', paddingVertical: 14 }}
+        >
+          <Text style={{ color: '#9ca3af', fontSize: 13 }}>Clear cart</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Checkout button */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 pt-3 pb-8">
-        <TouchableOpacity onPress={handleCheckout} disabled={loading} className="bg-orange-500 rounded-2xl py-4 items-center">
+      {/* Checkout bar */}
+      <View style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6',
+        paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32,
+      }}>
+        <TouchableOpacity
+          onPress={handleCheckout}
+          disabled={loading}
+          style={{
+            backgroundColor: '#111827', borderRadius: 18, paddingVertical: 17,
+            alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4,
+          }}
+        >
           {loading ? <ActivityIndicator color="white" /> : (
-            <Text className="text-white font-bold text-base">Pay £{(cartTotal + 3.99).toFixed(2)}</Text>
+            <>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Pay</Text>
+              <Text style={{ color: '#f97316', fontWeight: '800', fontSize: 18 }}>£{grandTotal.toFixed(2)}</Text>
+            </>
           )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+  )
+}
+
+function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+      <Text style={{ fontSize: 14, color: bold ? '#111827' : '#6b7280', fontWeight: bold ? '700' : '400' }}>{label}</Text>
+      <Text style={{ fontSize: 14, color: bold ? '#f97316' : '#111827', fontWeight: bold ? '800' : '600' }}>{value}</Text>
+    </View>
   )
 }
