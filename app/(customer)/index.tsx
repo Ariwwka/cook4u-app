@@ -33,22 +33,21 @@ export default function BrowseScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-        <Text style={{ fontSize: 26, fontWeight: '800', color: '#111827', letterSpacing: -0.5 }}>Find a Chef</Text>
-        <Text style={{ fontSize: 14, color: '#6b7280', marginTop: 2 }}>Home-cooked meals near you</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 14, paddingHorizontal: 14, marginTop: 14, gap: 8 }}>
-          <Text style={{ fontSize: 16 }}>🔍</Text>
+      <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+        <Text style={{ fontSize: 22, fontWeight: '800', color: '#111827', letterSpacing: -0.3 }}>Find a Chef</Text>
+        <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 1 }}>Home-cooked meals near you</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 12, paddingHorizontal: 12, marginTop: 10, gap: 8 }}>
+          <Text style={{ fontSize: 15 }}>🔍</Text>
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Search chefs or cuisines…"
             placeholderTextColor="#9ca3af"
-            style={{ flex: 1, paddingVertical: 12, fontSize: 14, color: '#111827' }}
+            style={{ flex: 1, paddingVertical: 9, fontSize: 13, color: '#111827' }}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <Text style={{ color: '#9ca3af', fontSize: 18 }}>✕</Text>
+              <Text style={{ color: '#9ca3af', fontSize: 16 }}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -61,17 +60,17 @@ export default function BrowseScreen() {
       ) : (
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          contentContainerStyle={{ padding: 14, paddingBottom: 28 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchChefs() }} tintColor="#f97316" />}
         >
           {filtered.length === 0 ? (
             <View style={{ alignItems: 'center', paddingTop: 80 }}>
-              <Text style={{ fontSize: 56, marginBottom: 12 }}>👨‍🍳</Text>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>No chefs found</Text>
-              <Text style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Try a different search</Text>
+              <Text style={{ fontSize: 48, marginBottom: 10 }}>👨‍🍳</Text>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>No chefs found</Text>
+              <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 3 }}>Try a different search</Text>
             </View>
           ) : (
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: 10 }}>
               {filtered.map(chef => <ChefCard key={chef.id} chef={chef} />)}
             </View>
           )}
@@ -86,51 +85,48 @@ function ChefCard({ chef }: { chef: ChefProfile }) {
   return (
     <TouchableOpacity
       onPress={() => router.push(`/(customer)/chef/${chef.id}`)}
+      activeOpacity={0.85}
       style={{
-        backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+        backgroundColor: '#fff', borderRadius: 18, overflow: 'hidden',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
       }}
     >
-      {/* Color banner */}
-      <View style={{ backgroundColor: '#fff7ed', height: 8 }} />
-
-      <View style={{ padding: 16 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ height: 4, backgroundColor: '#fed7aa' }} />
+      <View style={{ padding: 13 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           {chef.profile?.avatar_url ? (
-            <Image source={{ uri: chef.profile.avatar_url }} style={{ width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: '#fed7aa' }} />
+            <Image source={{ uri: chef.profile.avatar_url }} style={{ width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: '#fed7aa' }} />
           ) : (
-            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#fff7ed', borderWidth: 2, borderColor: '#fed7aa', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ color: '#f97316', fontSize: 22, fontWeight: '800' }}>{initials}</Text>
+            <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: '#fff7ed', borderWidth: 2, borderColor: '#fed7aa', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: '#f97316', fontSize: 18, fontWeight: '800' }}>{initials}</Text>
             </View>
           )}
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 17, fontWeight: '700', color: '#111827' }}>{chef.profile?.full_name ?? 'Chef'}</Text>
-              <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: '#16a34a' }}>Open</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827' }}>{chef.profile?.full_name ?? 'Chef'}</Text>
+              <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: '#16a34a' }}>Open</Text>
               </View>
             </View>
-            {chef.location && (
-              <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>📍 {chef.location}</Text>
-            )}
+            {chef.location && <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>📍 {chef.location}</Text>}
             {chef.rating ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 }}>
-                <Text style={{ fontSize: 13, color: '#f97316', fontWeight: '700' }}>★ {Number(chef.rating).toFixed(1)}</Text>
-                <Text style={{ fontSize: 12, color: '#9ca3af' }}>({chef.review_count} reviews)</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3, gap: 4 }}>
+                <Text style={{ fontSize: 11, color: '#f97316', fontWeight: '700' }}>★ {Number(chef.rating).toFixed(1)}</Text>
+                <Text style={{ fontSize: 11, color: '#9ca3af' }}>({chef.review_count})</Text>
               </View>
             ) : null}
           </View>
         </View>
 
         {chef.bio ? (
-          <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 12, lineHeight: 18 }} numberOfLines={2}>{chef.bio}</Text>
+          <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 9, lineHeight: 17 }} numberOfLines={2}>{chef.bio}</Text>
         ) : null}
 
         {chef.cuisine_tags && chef.cuisine_tags.length > 0 && (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 9 }}>
             {chef.cuisine_tags.slice(0, 4).map(tag => (
-              <View key={tag} style={{ backgroundColor: '#fff7ed', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
-                <Text style={{ fontSize: 12, color: '#ea580c', fontWeight: '600' }}>{tag}</Text>
+              <View key={tag} style={{ backgroundColor: '#fff7ed', borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 }}>
+                <Text style={{ fontSize: 11, color: '#ea580c', fontWeight: '600' }}>{tag}</Text>
               </View>
             ))}
           </View>

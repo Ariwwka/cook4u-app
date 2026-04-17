@@ -84,8 +84,8 @@ export default function ChefProfileScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         {/* Header */}
-        <View style={{ backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ fontSize: 24, fontWeight: '800', color: '#111827', letterSpacing: -0.5 }}>Profile</Text>
+        <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: '#111827', letterSpacing: -0.3 }}>Profile</Text>
           <TouchableOpacity onPress={signOut} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb' }}>
             <Text style={{ fontSize: 13, color: '#6b7280', fontWeight: '600' }}>Sign out</Text>
           </TouchableOpacity>
