@@ -1,25 +1,13 @@
-import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, View } from 'react-native'
-import { WebView } from 'react-native-webview'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { AuthProvider } from './src/context/AuthContext'
+import AppNavigator from './src/navigation'
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-      <WebView
-        source={{ uri: 'https://www.cook4u.london' }}
-        style={styles.webview}
-        startInLoadingState
-      />
-    </View>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </SafeAreaProvider>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  webview: {
-    flex: 1,
-  },
-})
