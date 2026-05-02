@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const { width } = Dimensions.get('window')
@@ -35,15 +34,20 @@ export default function LandingScreen({ navigation }) {
   const insets = useSafeAreaInsets()
 
   return (
-    <LinearGradient
-      colors={['#FF6B00', '#F97316', '#FDBA74']}
-      style={styles.gradient}
-    >
+    <View style={styles.container}>
+      {/* Orange background */}
+      <View style={StyleSheet.absoluteFill}>
+        <View style={styles.bgTop} />
+        <View style={styles.bgBottom} />
+      </View>
+
+      {/* Top section */}
       <View style={[styles.topSection, { paddingTop: insets.top + 32 }]}>
         <Text style={styles.wordmark}>Cook4U</Text>
         <Text style={styles.tagline}>Home-cooked meals from local chefs</Text>
       </View>
 
+      {/* Middle — teaser cards */}
       <View style={styles.middleSection}>
         <FlatList
           data={TEASER_CHEFS}
@@ -57,11 +61,12 @@ export default function LandingScreen({ navigation }) {
         />
       </View>
 
-      <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 16 }]}>
+      {/* Bottom CTAs */}
+      <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 20 }]}>
         <Text style={styles.joinLabel}>Join Cook4U</Text>
         <TouchableOpacity
           style={styles.createAccountButton}
-          activeOpacity={0.7}
+          activeOpacity={0.85}
           onPress={() => navigation.navigate('SignUp')}
         >
           <Text style={styles.createAccountText}>Create Account</Text>
@@ -74,20 +79,29 @@ export default function LandingScreen({ navigation }) {
           <Text style={styles.loginText}>I already have an account</Text>
         </TouchableOpacity>
       </View>
-    </LinearGradient>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  gradient: {
+  container: {
     flex: 1,
+    backgroundColor: '#F97316',
+  },
+  bgTop: {
+    flex: 0.6,
+    backgroundColor: '#EA6A0A',
+  },
+  bgBottom: {
+    flex: 0.4,
+    backgroundColor: '#FDBA74',
   },
   topSection: {
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   wordmark: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: 'bold',
     color: '#FFFFFF',
     letterSpacing: -0.5,
@@ -97,12 +111,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 8,
     textAlign: 'center',
-    opacity: 0.95,
+    opacity: 0.92,
   },
   middleSection: {
     flex: 1,
     justifyContent: 'center',
-    marginTop: 40,
+    marginTop: 36,
   },
   flatListContent: {
     paddingHorizontal: 20,
@@ -142,7 +156,7 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 20,
   },
   joinLabel: {
     fontSize: 13,
@@ -150,6 +164,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 12,
+    opacity: 0.9,
   },
   createAccountButton: {
     backgroundColor: '#FFFFFF',
@@ -164,12 +179,12 @@ const styles = StyleSheet.create({
     color: '#F97316',
   },
   loginTouchable: {
-    marginTop: 12,
+    marginTop: 14,
     alignItems: 'center',
   },
   loginText: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.6)',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.75)',
     textAlign: 'center',
   },
 })

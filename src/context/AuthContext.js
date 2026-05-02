@@ -15,33 +15,27 @@ export function AuthProvider({ children }) {
         .select('*')
         .eq('id', userId)
         .single()
-
-      if (error) {
-        console.error('Error fetching profile:', error)
-        return null
-      }
+      if (error) return null
       return data
-    } catch (err) {
-      console.error('fetchProfile exception:', err)
+    } catch {
       return null
     }
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user)
-        const profileData = await fetchProfile(session.user.id)
-        setProfile(profileData)
-      } else {
-        setUser(null)
-        setProfile(null)
-      }
-      setLoading(false)
-    })
-
+    // onAuthStateChange fires INITIAL_SESSION on startup — no need for
+    // a separate getSession() call which causes a race condition and
+    // triggers a "Refresh Token Not Found" error when there is no session.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          // Refresh failed — treat as signed out
+          setUser(null)
+          setProfile(null)
+          setLoading(false)
+          return
+        }
+
         if (session?.user) {
           setUser(session.user)
           const profileData = await fetchProfile(session.user.id)
@@ -54,9 +48,7 @@ export function AuthProvider({ children }) {
       }
     )
 
-    return () => {
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   async function signOut() {

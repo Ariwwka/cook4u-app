@@ -69,7 +69,7 @@ export default function DashboardScreen({ navigation }) {
     setLoading(true)
     try {
       const [chefProfileRes, ordersRes] = await Promise.all([
-        supabase.from('chef_profiles').select('*').eq('user_id', user.id).single(),
+        supabase.from('chef_profiles').select('*').eq('id', user.id).single(),
         supabase
           .from('orders')
           .select('id', { count: 'exact' })
