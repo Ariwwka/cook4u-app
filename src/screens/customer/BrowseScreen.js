@@ -29,7 +29,7 @@ function ChefCard({ chef, onPress }) {
     : '?'
 
   const isAvailable = chef.chef_profiles?.[0]?.is_available ?? false
-  const rating = chef.chef_profiles?.[0]?.average_rating ?? null
+  const rating = chef.chef_profiles?.[0]?.rating ?? null
   const cuisine = chef.chef_profiles?.[0]?.cuisine_tags?.[0] ?? 'Various'
 
   return (
@@ -74,7 +74,7 @@ export default function BrowseScreen({ navigation }) {
     try {
       let query = supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, chef_profiles(cuisine_tags, average_rating, is_available, bio)')
+        .select('id, full_name, avatar_url, chef_profiles(cuisine_tags, rating, is_available, bio)')
         .eq('role', 'chef')
         .eq('chef_profiles.verification_status', 'verified')
 

@@ -44,16 +44,34 @@ export default function FavouritesScreen({ navigation }) {
     if (!user?.id) return
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      const { data: favData, error: favError } = await supabase
         .from('chef_favorites')
-        .select('*, profiles:chef_id(id, full_name)')
+        .select('id, chef_id, created_at')
         .eq('customer_id', user.id)
 
-      if (error) {
-        console.error('Error fetching favourites:', error)
-      } else {
-        setFavourites(data || [])
+      if (favError) {
+        console.error('Error fetching favourites:', favError)
+        setFavourites([])
+        return
       }
+
+      if (!favData || favData.length === 0) {
+        setFavourites([])
+        return
+      }
+
+      const chefIds = favData.map((f) => f.chef_id)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', chefIds)
+
+      const profileMap = {}
+      ;(profileData || []).forEach((p) => { profileMap[p.id] = p })
+
+      setFavourites(
+        favData.map((f) => ({ ...f, profiles: profileMap[f.chef_id] ?? null }))
+      )
     } catch (err) {
       console.error('fetchFavourites exception:', err)
     } finally {

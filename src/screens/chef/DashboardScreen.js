@@ -81,7 +81,7 @@ export default function DashboardScreen({ navigation }) {
       }
 
       const totalOrders = ordersRes.count ?? 0
-      const rating = chefProfileRes.data?.average_rating ?? null
+      const rating = chefProfileRes.data?.rating ?? null
       const createdAt = profile?.created_at ?? user?.created_at
       const memberSince = createdAt
         ? new Date(createdAt).toLocaleDateString('en-GB', {
