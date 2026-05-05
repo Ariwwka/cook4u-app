@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  Image,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -31,6 +32,7 @@ function ChefCard({ chef, onPress }) {
   const isAvailable = chef.chef_profiles?.[0]?.is_available ?? false
   const rating = chef.chef_profiles?.[0]?.rating ?? null
   const cuisine = chef.chef_profiles?.[0]?.cuisine_tags?.[0] ?? 'Various'
+  const avatarUrl = chef.avatar_url ?? null
 
   return (
     <TouchableOpacity
@@ -38,9 +40,13 @@ function ChefCard({ chef, onPress }) {
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.chefAvatar}>
-        <Text style={styles.chefAvatarText}>{initials}</Text>
-      </View>
+      {avatarUrl ? (
+        <Image source={{ uri: avatarUrl }} style={styles.chefAvatarImage} />
+      ) : (
+        <View style={styles.chefAvatar}>
+          <Text style={styles.chefAvatarText}>{initials}</Text>
+        </View>
+      )}
       <Text style={styles.chefName} numberOfLines={1}>{chef.full_name || 'Chef'}</Text>
       <Text style={styles.chefCuisine} numberOfLines={1}>{cuisine}</Text>
       <View style={styles.chefMeta}>
@@ -77,6 +83,7 @@ export default function BrowseScreen({ navigation }) {
         .select('id, full_name, avatar_url, chef_profiles(cuisine_tags, rating, is_available, bio)')
         .eq('role', 'chef')
         .eq('chef_profiles.verification_status', 'verified')
+        .eq('chef_profiles.is_available', true)
 
       const { data, error } = await query
       if (error) {
@@ -304,6 +311,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+  },
+  chefAvatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginBottom: 8,
   },
   chefAvatar: {
     width: 48,

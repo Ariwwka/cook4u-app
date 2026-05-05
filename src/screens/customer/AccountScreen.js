@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Linking,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -44,21 +45,32 @@ export default function AccountScreen({ navigation }) {
     .toUpperCase()
 
   function handleMenuPress(key) {
-    if (key === 'orders') {
-      navigation.navigate('OrdersTab')
-    } else if (key === 'favourites') {
-      navigation.navigate('FavouritesTab')
+    switch (key) {
+      case 'personal':
+        navigation.navigate('PersonalInfo')
+        break
+      case 'addresses':
+        navigation.navigate('Addresses')
+        break
+      case 'orders':
+        navigation.navigate('OrdersTab')
+        break
+      case 'favourites':
+        navigation.navigate('FavouritesTab')
+        break
+      case 'help':
+        Linking.openURL('https://cook4u.london/contact')
+        break
+      case 'terms':
+        navigation.navigate('Terms')
+        break
     }
   }
 
   function handleSignOut() {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: signOut,
-      },
+      { text: 'Sign Out', style: 'destructive', onPress: signOut },
     ])
   }
 
@@ -70,10 +82,7 @@ export default function AccountScreen({ navigation }) {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 32 },
-        ]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 32 }]}
       >
         <View style={styles.profileSection}>
           <View style={styles.avatarCircle}>
@@ -84,7 +93,7 @@ export default function AccountScreen({ navigation }) {
         </View>
 
         <View style={styles.menuSection}>
-          {MENU_ITEMS.map((item, index) => (
+          {MENU_ITEMS.map((item) => (
             <MenuRow
               key={item.key}
               icon={item.icon}
@@ -109,28 +118,16 @@ export default function AccountScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-  },
-  profileSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1C1C1E' },
+  scrollContent: { paddingHorizontal: 20 },
+  profileSection: { alignItems: 'center', paddingVertical: 32 },
   avatarCircle: {
     width: 80,
     height: 80,
@@ -142,25 +139,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  avatarText: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#F97316',
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-    marginBottom: 4,
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  menuSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
+  avatarText: { fontSize: 30, fontWeight: 'bold', color: '#F97316' },
+  profileName: { fontSize: 20, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 4 },
+  profileEmail: { fontSize: 14, color: '#6B7280' },
+  menuSection: { borderTopWidth: 1, borderTopColor: '#E5E7EB' },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -168,20 +150,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
-  menuRowIcon: {
-    fontSize: 20,
-    marginRight: 14,
-  },
-  menuRowLabel: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1C1C1E',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 24,
-  },
+  menuRowIcon: { fontSize: 20, marginRight: 14 },
+  menuRowLabel: { flex: 1, fontSize: 16, color: '#1C1C1E' },
+  divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 24 },
   signOutButton: {
     height: 50,
     borderRadius: 12,
@@ -190,9 +161,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#EF4444',
-  },
+  signOutText: { fontSize: 16, fontWeight: '600', color: '#EF4444' },
 })

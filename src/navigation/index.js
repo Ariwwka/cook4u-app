@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 
 import LandingScreen from '../screens/LandingScreen'
 import LoginScreen from '../screens/LoginScreen'
@@ -16,11 +17,16 @@ import OrdersScreen from '../screens/customer/OrdersScreen'
 import FavouritesScreen from '../screens/customer/FavouritesScreen'
 import CustomerAccountScreen from '../screens/customer/AccountScreen'
 import ChefDetailScreen from '../screens/customer/ChefDetailScreen'
+import CartScreen from '../screens/customer/CartScreen'
+import PersonalInfoScreen from '../screens/customer/PersonalInfoScreen'
+import AddressesScreen from '../screens/customer/AddressesScreen'
+import TermsScreen from '../screens/shared/TermsScreen'
 
 import DashboardScreen from '../screens/chef/DashboardScreen'
 import MenusScreen from '../screens/chef/MenusScreen'
 import ChefOrdersScreen from '../screens/chef/ChefOrdersScreen'
 import ChefAccountScreen from '../screens/chef/ChefAccountScreen'
+import ChefPersonalInfoScreen from '../screens/chef/PersonalInfoScreen'
 
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -35,7 +41,8 @@ function AuthStack() {
   )
 }
 
-function CustomerStack() {
+// Browse stack: Browse → ChefDetail
+function BrowseStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Browse" component={BrowseScreen} />
@@ -44,8 +51,21 @@ function CustomerStack() {
   )
 }
 
+// Account stack: Account → PersonalInfo / Addresses / Terms
+function AccountStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Account" component={CustomerAccountScreen} />
+      <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+      <Stack.Screen name="Addresses" component={AddressesScreen} />
+      <Stack.Screen name="Terms" component={TermsScreen} />
+    </Stack.Navigator>
+  )
+}
+
 function CustomerTabs() {
   const insets = useSafeAreaInsets()
+  const { itemCount } = useCart()
 
   return (
     <Tab.Navigator
@@ -61,13 +81,13 @@ function CustomerTabs() {
         },
         tabBarActiveTintColor: '#F97316',
         tabBarInactiveTintColor: '#9CA3AF',
-        tabBarLabelStyle: {
-          fontSize: 11,
-        },
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarLabelStyle: { fontSize: 11 },
+        tabBarIcon: ({ focused, color }) => {
           let iconName
           if (route.name === 'BrowseTab') {
             iconName = focused ? 'home' : 'home-outline'
+          } else if (route.name === 'CartTab') {
+            iconName = focused ? 'cart' : 'cart-outline'
           } else if (route.name === 'OrdersTab') {
             iconName = focused ? 'receipt' : 'receipt-outline'
           } else if (route.name === 'FavouritesTab') {
@@ -81,8 +101,17 @@ function CustomerTabs() {
     >
       <Tab.Screen
         name="BrowseTab"
-        component={CustomerStack}
+        component={BrowseStack}
         options={{ tabBarLabel: 'Browse' }}
+      />
+      <Tab.Screen
+        name="CartTab"
+        component={CartScreen}
+        options={{
+          tabBarLabel: 'Cart',
+          tabBarBadge: itemCount > 0 ? itemCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#F97316', color: '#FFFFFF', fontSize: 10 },
+        }}
       />
       <Tab.Screen
         name="OrdersTab"
@@ -96,10 +125,21 @@ function CustomerTabs() {
       />
       <Tab.Screen
         name="AccountTab"
-        component={CustomerAccountScreen}
+        component={AccountStack}
         options={{ tabBarLabel: 'Account' }}
       />
     </Tab.Navigator>
+  )
+}
+
+// Chef account stack: ChefAccount → PersonalInfo / Terms
+function ChefAccountStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ChefAccount" component={ChefAccountScreen} />
+      <Stack.Screen name="ChefPersonalInfo" component={ChefPersonalInfoScreen} />
+      <Stack.Screen name="ChefTerms" component={TermsScreen} />
+    </Stack.Navigator>
   )
 }
 
@@ -120,9 +160,7 @@ function ChefTabs() {
         },
         tabBarActiveTintColor: '#F97316',
         tabBarInactiveTintColor: '#9CA3AF',
-        tabBarLabelStyle: {
-          fontSize: 11,
-        },
+        tabBarLabelStyle: { fontSize: 11 },
         tabBarIcon: ({ focused, color }) => {
           let iconName
           if (route.name === 'DashboardTab') {
@@ -155,7 +193,7 @@ function ChefTabs() {
       />
       <Tab.Screen
         name="ChefAccountTab"
-        component={ChefAccountScreen}
+        component={ChefAccountStack}
         options={{ tabBarLabel: 'Account' }}
       />
     </Tab.Navigator>
@@ -165,9 +203,7 @@ function ChefTabs() {
 export default function AppNavigator() {
   const { user, profile, loading } = useAuth()
 
-  if (loading) {
-    return null
-  }
+  if (loading) return null
 
   return (
     <NavigationContainer>

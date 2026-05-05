@@ -12,16 +12,9 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuth } from '../../context/AuthContext'
 
-const VERIFICATION_STATUS_INFO = {
-  unsubmitted: { label: 'Not Submitted', bg: '#FFF7ED', text: '#C2410C' },
-  pending: { label: 'Under Review', bg: '#FFFBEB', text: '#92400E' },
-  verified: { label: 'Verified', bg: '#F0FDF4', text: '#15803D' },
-  rejected: { label: 'Rejected', bg: '#FEF2F2', text: '#B91C1C' },
-}
-
 const MENU_ITEMS = [
   { icon: '👤', label: 'Personal Info', key: 'personal' },
-  { icon: '🍽️', label: 'Manage Profile at cook4u.london', key: 'webprofile' },
+  { icon: '🍽️', label: 'Manage Profile', key: 'webprofile' },
   { icon: '❓', label: 'Help & Support', key: 'help' },
   { icon: '📄', label: 'Terms of Service', key: 'terms' },
 ]
@@ -36,7 +29,7 @@ function MenuRow({ icon, label, onPress }) {
   )
 }
 
-export default function ChefAccountScreen() {
+export default function ChefAccountScreen({ navigation }) {
   const insets = useSafeAreaInsets()
   const { user, profile, signOut } = useAuth()
 
@@ -49,13 +42,15 @@ export default function ChefAccountScreen() {
     .slice(0, 2)
     .toUpperCase()
 
-  const verificationStatus = profile?.verification_status ?? 'unsubmitted'
-  const statusInfo =
-    VERIFICATION_STATUS_INFO[verificationStatus] ?? VERIFICATION_STATUS_INFO.unsubmitted
-
   function handleMenuPress(key) {
-    if (key === 'webprofile') {
-      Linking.openURL('https://cook4u.london')
+    if (key === 'personal') {
+      navigation.navigate('ChefPersonalInfo')
+    } else if (key === 'webprofile') {
+      Linking.openURL('https://cook4u.london/dashboard/chef')
+    } else if (key === 'help') {
+      Linking.openURL('https://cook4u.london/contact')
+    } else if (key === 'terms') {
+      navigation.navigate('ChefTerms')
     }
   }
 
@@ -74,10 +69,7 @@ export default function ChefAccountScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 32 },
-        ]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 32 }]}
       >
         <View style={styles.profileSection}>
           <View style={styles.avatarCircle}>
@@ -85,11 +77,6 @@ export default function ChefAccountScreen() {
           </View>
           <Text style={styles.profileName}>{fullName}</Text>
           <Text style={styles.profileEmail}>{email}</Text>
-          <View style={[styles.verificationBadge, { backgroundColor: statusInfo.bg }]}>
-            <Text style={[styles.verificationBadgeText, { color: statusInfo.text }]}>
-              {statusInfo.label}
-            </Text>
-          </View>
         </View>
 
         <View style={styles.menuSection}>
@@ -118,28 +105,16 @@ export default function ChefAccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-  },
-  profileSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1C1C1E' },
+  scrollContent: { paddingHorizontal: 20 },
+  profileSection: { alignItems: 'center', paddingVertical: 32 },
   avatarCircle: {
     width: 80,
     height: 80,
@@ -151,35 +126,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  avatarText: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#F97316',
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-    marginBottom: 4,
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 12,
-  },
-  verificationBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  verificationBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  menuSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
+  avatarText: { fontSize: 30, fontWeight: 'bold', color: '#F97316' },
+  profileName: { fontSize: 20, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 4 },
+  profileEmail: { fontSize: 14, color: '#6B7280' },
+  menuSection: { borderTopWidth: 1, borderTopColor: '#E5E7EB' },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -187,20 +137,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
-  menuRowIcon: {
-    fontSize: 20,
-    marginRight: 14,
-  },
-  menuRowLabel: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1C1C1E',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 24,
-  },
+  menuRowIcon: { fontSize: 20, marginRight: 14 },
+  menuRowLabel: { flex: 1, fontSize: 16, color: '#1C1C1E' },
+  divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 24 },
   signOutButton: {
     height: 50,
     borderRadius: 12,
@@ -209,9 +148,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#EF4444',
-  },
+  signOutText: { fontSize: 16, fontWeight: '600', color: '#EF4444' },
 })
