@@ -8,9 +8,9 @@ import {
   Alert,
   ActivityIndicator,
   TextInput,
-  Linking,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { usePaymentSheet } from '@stripe/stripe-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
@@ -19,7 +19,19 @@ import { supabase } from '../../lib/supabase'
 export default function CartScreen({ navigation }) {
   const insets = useSafeAreaInsets()
   const { user } = useAuth()
-  const { items, cartChefName, addItem, removeItem, clearCart, subtotal, serviceFee, total, itemCount } = useCart()
+  const {
+    items,
+    cartChefName,
+    addItem,
+    removeItem,
+    clearCart,
+    subtotal,
+    serviceFee,
+    total,
+    itemCount,
+  } = useCart()
+  const { initPaymentSheet, presentPaymentSheet, loading: stripeLoading } = usePaymentSheet()
+
   const [notes, setNotes] = useState('')
   const [defaultAddress, setDefaultAddress] = useState(null)
   const [placing, setPlacing] = useState(false)
@@ -31,7 +43,7 @@ export default function CartScreen({ navigation }) {
       .select('*')
       .eq('customer_id', user.id)
       .eq('is_default', true)
-      .single()
+      .maybeSingle()
     if (data) setDefaultAddress(data)
   }, [user?.id])
 
@@ -42,14 +54,11 @@ export default function CartScreen({ navigation }) {
   async function handleCheckout() {
     if (!defaultAddress) {
       Alert.alert(
-        'No Address',
-        'Please add a delivery address in your account settings before ordering.',
+        'No Delivery Address',
+        'Please add a delivery address in Account → My Addresses before ordering.',
         [
           { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Add Address',
-            onPress: () => navigation.navigate('AccountTab'),
-          },
+          { text: 'Add Address', onPress: () => navigation.navigate('AccountTab') },
         ]
       )
       return
@@ -66,7 +75,8 @@ export default function CartScreen({ navigation }) {
         .filter(Boolean)
         .join(', ')
 
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
+      // Step 1: create order + PaymentIntent via edge function
+      const { data, error: fnError } = await supabase.functions.invoke('create-payment-intent', {
         body: {
           items: items.map((i) => ({
             menuItemId: i.menuItemId,
@@ -74,7 +84,6 @@ export default function CartScreen({ navigation }) {
             price: i.price,
             quantity: i.quantity,
           })),
-          chef_id: items[0] ? undefined : null,
           customer_id: user.id,
           delivery_address_text: deliveryText,
           delivery_address_id: defaultAddress.id,
@@ -82,17 +91,57 @@ export default function CartScreen({ navigation }) {
         },
       })
 
-      if (error || data?.error) {
+      if (fnError || data?.error) {
         Alert.alert('Error', data?.error ?? 'Could not create your order. Please try again.')
         return
       }
 
-      if (data?.checkoutUrl) {
-        clearCart()
-        await Linking.openURL(data.checkoutUrl)
-        navigation.navigate('OrdersTab')
+      // Step 2: init Payment Sheet
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'Cook4U',
+        customerId: data.customerId,
+        customerEphemeralKeySecret: data.ephemeralKey,
+        paymentIntentClientSecret: data.clientSecret,
+        allowsDelayedPaymentMethods: false,
+        appearance: {
+          colors: {
+            primary: '#F97316',
+            background: '#FFFFFF',
+            componentBackground: '#F9FAFB',
+            componentBorder: '#E5E7EB',
+          },
+          shapes: {
+            borderRadius: 12,
+          },
+        },
+        defaultBillingDetails: {
+          email: user.email,
+        },
+      })
+
+      if (initError) {
+        Alert.alert('Payment Error', initError.message)
+        return
       }
+
+      // Step 3: present Payment Sheet to the user
+      const { error: payError } = await presentPaymentSheet()
+
+      if (payError) {
+        if (payError.code !== 'Canceled') {
+          Alert.alert('Payment Failed', payError.message)
+        }
+        // Order stays in payment_pending — auto-cleaned after 30 min
+        return
+      }
+
+      // Success!
+      clearCart()
+      setNotes('')
+      navigation.navigate('OrdersTab')
+      Alert.alert('Order placed!', "Your order has been sent to the chef. You'll be notified once they accept it.")
     } catch (err) {
+      console.error('checkout error:', err)
       Alert.alert('Error', 'Something went wrong. Please try again.')
     } finally {
       setPlacing(false)
@@ -128,6 +177,8 @@ export default function CartScreen({ navigation }) {
     )
   }
 
+  const busy = placing || stripeLoading
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -144,14 +195,18 @@ export default function CartScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           cartChefName ? (
-            <Text style={styles.chefLabel}>From: <Text style={styles.chefLabelBold}>{cartChefName}</Text></Text>
+            <Text style={styles.chefLabel}>
+              From: <Text style={styles.chefLabelBold}>{cartChefName}</Text>
+            </Text>
           ) : null
         }
         renderItem={({ item }) => (
           <View style={styles.itemRow}>
             <View style={styles.itemInfo}>
               <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemPrice}>£{(item.price * item.quantity).toFixed(2)}</Text>
+              <Text style={styles.itemPrice}>
+                £{(item.price * item.quantity).toFixed(2)}
+              </Text>
             </View>
             <View style={styles.qtyControls}>
               <TouchableOpacity
@@ -193,21 +248,26 @@ export default function CartScreen({ navigation }) {
               />
             </View>
 
-            <View style={styles.addressSection}>
+            <TouchableOpacity
+              style={styles.addressSection}
+              onPress={() => navigation.navigate('AccountTab')}
+              activeOpacity={0.8}
+            >
               <View style={styles.addressSectionLeft}>
                 <Ionicons name="location-outline" size={18} color="#6B7280" />
                 <Text style={styles.addressSectionLabel}>Delivering to</Text>
               </View>
               {defaultAddress ? (
-                <Text style={styles.addressText}>
-                  {defaultAddress.line1}, {defaultAddress.city}
-                </Text>
+                <View style={styles.addressRow}>
+                  <Text style={styles.addressText} numberOfLines={1}>
+                    {defaultAddress.line1}, {defaultAddress.city}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={14} color="#9CA3AF" />
+                </View>
               ) : (
-                <TouchableOpacity onPress={() => navigation.navigate('AccountTab')} activeOpacity={0.7}>
-                  <Text style={styles.addAddressLink}>Add delivery address →</Text>
-                </TouchableOpacity>
+                <Text style={styles.addAddressLink}>Tap to add address →</Text>
               )}
-            </View>
+            </TouchableOpacity>
 
             <View style={styles.totalsBox}>
               <View style={styles.totalRow}>
@@ -229,16 +289,16 @@ export default function CartScreen({ navigation }) {
 
       <View style={[styles.checkoutBar, { paddingBottom: insets.bottom + 12 }]}>
         <TouchableOpacity
-          style={[styles.checkoutButton, placing && styles.checkoutButtonDisabled]}
+          style={[styles.checkoutButton, busy && styles.checkoutButtonDisabled]}
           onPress={handleCheckout}
-          disabled={placing}
+          disabled={busy}
           activeOpacity={0.85}
         >
-          {placing ? (
+          {busy ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>
-              <Text style={styles.checkoutButtonText}>Place Order</Text>
+              <Text style={styles.checkoutButtonText}>Pay & Place Order</Text>
               <Text style={styles.checkoutButtonPrice}>£{total.toFixed(2)}</Text>
             </>
           )}
@@ -287,11 +347,7 @@ const styles = StyleSheet.create({
   itemInfo: { flex: 1 },
   itemName: { fontSize: 15, fontWeight: '600', color: '#1C1C1E', marginBottom: 2 },
   itemPrice: { fontSize: 14, color: '#F97316', fontWeight: '600' },
-  qtyControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
+  qtyControls: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   qtyButton: {
     width: 32,
     height: 32,
@@ -302,8 +358,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   qtyText: { fontSize: 16, fontWeight: 'bold', color: '#1C1C1E', minWidth: 20, textAlign: 'center' },
-  footer: { paddingTop: 20 },
-  notesContainer: { marginBottom: 20 },
+  footer: { paddingTop: 20, paddingBottom: 120 },
+  notesContainer: { marginBottom: 16 },
   notesLabel: { fontSize: 13, fontWeight: '600', color: '#6B7280', marginBottom: 8 },
   notesInput: {
     borderWidth: 1.5,
@@ -320,13 +376,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 14,
-    marginBottom: 20,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
   addressSectionLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   addressSectionLabel: { fontSize: 13, color: '#6B7280', fontWeight: '600' },
-  addressText: { fontSize: 14, color: '#1C1C1E', fontWeight: '500' },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  addressText: { flex: 1, fontSize: 14, color: '#1C1C1E', fontWeight: '500' },
   addAddressLink: { fontSize: 14, color: '#F97316', fontWeight: '600' },
   totalsBox: {
     backgroundColor: '#F9FAFB',
@@ -334,7 +391,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    marginBottom: 100,
   },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   totalRowFinal: {

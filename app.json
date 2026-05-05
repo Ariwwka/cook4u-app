@@ -12,20 +12,31 @@
       "backgroundColor": "#F97316"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "london.cook4u.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "london.cook4u.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.london.cook4u"
+        }
+      ]
+    ],
+    "extra": {
+      "stripePk": "pk_live_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY"
+    }
   }
 }
